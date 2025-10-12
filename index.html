@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Кофейня</title>
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <!-- ГЛАВНАЯ СТРАНИЦА -->
+    <div id="main-page" class="page active">
+        <div class="header">
+            <h1>🍰 Кофейня</h1>
+            <div class="cart-button" onclick="showCart()">
+                🧺 <span id="cart-count">0</span>
+            </div>
+        </div>
+
+        <!-- КАТЕГОРИИ -->
+        <div id="categories" class="categories"></div>
+
+        <!-- ТОВАРЫ -->
+        <div id="items" class="items"></div>
+    </div>
+
+    <!-- СТРАНИЦА ТОВАРА -->
+    <div id="item-page" class="page">
+        <div class="header">
+            <button class="back-button" onclick="backToMain()">← Назад</button>
+            <h2 id="item-title"></h2>
+        </div>
+
+        <!-- РАЗМЕРЫ -->
+        <div id="sizes" class="sizes"></div>
+
+        <!-- ДОБАВКИ -->
+        <div class="additions-section">
+            <h3>Добавки</h3>
+            <div id="additions" class="additions"></div>
+        </div>
+
+        <!-- КОММЕНТАРИЙ -->
+        <div class="comment-section">
+            <label>Комментарий к позиции:</label>
+            <input type="text" id="item-comment" maxlength="50" placeholder="Например: погорячее">
+        </div>
+
+        <!-- ИТОГО И КНОПКА -->
+        <div class="item-footer">
+            <div class="item-price">
+                Итого: <span id="item-total">0</span>₽
+            </div>
+            <button class="btn-primary" onclick="addToCart()">Добавить в корзину</button>
+        </div>
+    </div>
+
+    <!-- КОРЗИНА -->
+    <div id="cart-page" class="page">
+        <div class="header">
+            <button class="back-button" onclick="backToMain()">← Назад</button>
+            <h2>Корзина</h2>
+        </div>
+
+        <div id="cart-items" class="cart-items"></div>
+
+        <div class="cart-footer">
+            <!-- КОММЕНТАРИЙ К ЗАКАЗУ -->
+            <div class="comment-section">
+                <label>Комментарий к заказу:</label>
+                <textarea id="order-comment" maxlength="120" placeholder="Например: сэндвич не греть, пакет, подставка"></textarea>
+            </div>
+
+            <!-- ВРЕМЯ -->
+            <div class="time-section">
+                <label>Время:</label>
+                <select id="delivery-time">
+                    <option value="asap">Как можно скорее</option>
+                </select>
+            </div>
+
+            <!-- ИТОГО -->
+            <div class="cart-total">
+                Итого: <span id="cart-total">0</span>₽
+            </div>
+
+            <button class="btn-primary" onclick="checkout()">Оформить заказ</button>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО ДОБАВОК -->
+    <div id="syrup-modal" class="modal">
+        <div class="modal-content">
+            <h3>Выберите сироп</h3>
+            <div id="syrup-list"></div>
+            <button class="btn-secondary" onclick="closeSyrupModal()">Закрыть</button>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО МЯТА/ЛИМОН -->
+    <div id="mint-lemon-modal" class="modal">
+        <div class="modal-content">
+            <h3>Выберите добавку</h3>
+            <div id="mint-lemon-list"></div>
+            <button class="btn-secondary" onclick="closeMintLemonModal()">Закрыть</button>
+        </div>
+    </div>
+
+    <script src="/app.js"></script>
+</body>
+</html>
