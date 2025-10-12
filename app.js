@@ -1,6 +1,4 @@
-// app.js - ЛОГИКА TELEGRAM MINI APP
-
-// Инициализация Telegram Web App
+// app.js - ДЛЯ GITHUB PAGES
 const tg = window.Telegram.WebApp;
 tg.expand();
 tg.enableClosingConfirmation();
@@ -17,8 +15,8 @@ let selectedSize = null;
 let selectedAdditions = [];
 let itemComment = '';
 
-// API URL
-const API_URL = window.location.origin;
+// ЗАМЕНИТЕ НА ВАШ URL С AMVERA
+const API_URL = 'https://your-app-name.amvera.io';
 
 // ============= ИНИЦИАЛИЗАЦИЯ =============
 
@@ -27,24 +25,17 @@ async function init() {
     console.log('API URL:', API_URL);
 
     try {
-        // Загружаем меню
-        console.log('Загрузка меню...');
-        const menuResponse = await fetch(`${API_URL}/menu`);
+        // Загружаем данные с API
+        const [menuResponse, additionsResponse, configResponse, stopListResponse] = await Promise.all([
+            fetch(`${API_URL}/menu`),
+            fetch(`${API_URL}/additions`),
+            fetch(`${API_URL}/config`),
+            fetch(`${API_URL}/stop_list`)
+        ]);
+
         menu = await menuResponse.json();
-
-        // Загружаем добавки
-        console.log('Загрузка добавок...');
-        const additionsResponse = await fetch(`${API_URL}/additions`);
         additions = await additionsResponse.json();
-
-        // Загружаем конфиг
-        console.log('Загрузка конфига...');
-        const configResponse = await fetch(`${API_URL}/config`);
         config = await configResponse.json();
-
-        // Загружаем стоп-лист
-        console.log('Загрузка стоп-листа...');
-        const stopListResponse = await fetch(`${API_URL}/stop_list`);
         stopList = await stopListResponse.json();
 
         // Отображаем категории
@@ -61,7 +52,7 @@ async function init() {
 
     } catch (error) {
         console.error('Ошибка загрузки:', error);
-        tg.showAlert('Ошибка загрузки меню');
+        tg.showAlert('Ошибка загрузки меню. Проверьте подключение к интернету.');
     }
 }
 
@@ -82,13 +73,9 @@ function renderCategories() {
 
 function selectCategory(category) {
     currentCategory = category;
-
-    // Обновляем активную категорию
     document.querySelectorAll('.category-btn').forEach(btn => {
         btn.classList.toggle('active', btn.textContent === category);
     });
-
-    // Отображаем товары
     renderItems(category);
 }
 
@@ -104,15 +91,14 @@ function renderItems(category) {
         const card = document.createElement('div');
         card.className = 'item-card';
 
-        // Проверяем, есть ли товар в стоп-листе
+        // Проверяем стоп-лист
         const isInStopList = stopList.some(item =>
             item.category === category && item.item_name === name
         );
 
         if (isInStopList) {
-            // Товар в стоп-листе - показываем сообщение
             card.innerHTML = `
-                <img src="/images/placeholder.png" alt="${name}" class="item-image">
+                <img src="images/placeholder.png" alt="${name}" class="item-image">
                 <div class="item-info">
                     <div class="item-name">${name}</div>
                     <div class="item-stop-list">⛔ В стоп-листе</div>
@@ -120,21 +106,13 @@ function renderItems(category) {
             `;
             card.style.opacity = '0.6';
         } else {
-            // Товар доступен
             card.onclick = () => showItem(name, data, category);
-
             const basePrice = data.base_price;
-            const priceText = data.sizes
-                ? `от ${basePrice}₽`
-                : `${basePrice}₽`;
-
-            // Путь к изображению
-            const imagePath = data.image
-                ? `/images/${data.image}`
-                : '/images/placeholder.png';
+            const priceText = data.sizes ? `от ${basePrice}₽` : `${basePrice}₽`;
+            const imagePath = data.image ? `images/${data.image}` : 'images/placeholder.png';
 
             card.innerHTML = `
-                <img src="${imagePath}" alt="${name}" class="item-image" onerror="this.src='/images/placeholder.png'">
+                <img src="${imagePath}" alt="${name}" class="item-image" onerror="this.src='images/placeholder.png'">
                 <div class="item-info">
                     <div class="item-name">${name}</div>
                     <div class="item-price">${priceText}</div>
@@ -149,7 +127,6 @@ function renderItems(category) {
 // ============= СТРАНИЦА ТОВАРА =============
 
 function showItem(name, data, category) {
-    // Проверяем, не в стоп-листе ли товар
     const isInStopList = stopList.some(item =>
         item.category === category && item.item_name === name
     );
@@ -164,24 +141,14 @@ function showItem(name, data, category) {
     selectedAdditions = [];
     itemComment = '';
 
-    // Показываем страницу
     document.getElementById('main-page').classList.remove('active');
     document.getElementById('item-page').classList.add('active');
-
-    // Заголовок
     document.getElementById('item-title').textContent = name;
 
-    // Размеры
     renderSizes(data);
-
-    // Добавки
     renderAdditions();
-
-    // Обновляем цену
     updateItemPrice();
 }
-
-// ... остальной код без изменений ...
 
 function renderSizes(data) {
     const sizesDiv = document.getElementById('sizes');
@@ -190,42 +157,31 @@ function renderSizes(data) {
     if (data.sizes) {
         Object.entries(data.sizes).forEach(([size, extraPrice]) => {
             const totalPrice = data.base_price + extraPrice;
-
             const btn = document.createElement('button');
             btn.className = 'size-btn';
             btn.onclick = () => selectSize(size, totalPrice);
-
             btn.innerHTML = `
                 <div class="size-name">${size}</div>
                 <div class="size-price">${totalPrice}₽</div>
             `;
-
             sizesDiv.appendChild(btn);
         });
     } else {
-        // Без размеров
         const btn = document.createElement('button');
         btn.className = 'size-btn active';
         selectedSize = { name: 'standard', price: data.base_price };
-
         btn.innerHTML = `
             <div class="size-name">Стандарт</div>
             <div class="size-price">${data.base_price}₽</div>
         `;
-
         sizesDiv.appendChild(btn);
     }
 }
 
 function selectSize(sizeName, price) {
     selectedSize = { name: sizeName, price };
-
-    // Обновляем активную кнопку
-    document.querySelectorAll('.size-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
+    document.querySelectorAll('.size-btn').forEach(btn => btn.classList.remove('active'));
     event.target.closest('.size-btn').classList.add('active');
-
     updateItemPrice();
 }
 
@@ -235,19 +191,12 @@ function renderAdditions() {
     const additionsDiv = document.getElementById('additions');
     additionsDiv.innerHTML = '';
 
-    // Сироп
     const syrupBtn = createAdditionButton('🍯 Сироп', () => showSyrupModal());
-    additionsDiv.appendChild(syrupBtn);
-
-    // Корица
-    const cinnamonBtn = createAdditionButton(
-        `🌿 Корица (+${additions['Корица'].price}₽)`,
-        () => toggleAddition('Корица', additions['Корица'].price)
-    );
-    additionsDiv.appendChild(cinnamonBtn);
-
-    // Мята и лимон
+    const cinnamonBtn = createAdditionButton(`🌿 Корица (+${additions['Корица'].price}₽)`, () => toggleAddition('Корица', additions['Корица'].price));
     const mintLemonBtn = createAdditionButton('🍃 Мята и лимон', () => showMintLemonModal());
+
+    additionsDiv.appendChild(syrupBtn);
+    additionsDiv.appendChild(cinnamonBtn);
     additionsDiv.appendChild(mintLemonBtn);
 }
 
@@ -261,7 +210,6 @@ function createAdditionButton(text, onClick) {
 
 function toggleAddition(name, price) {
     const index = selectedAdditions.findIndex(a => a.name === name);
-
     if (index > -1) {
         selectedAdditions.splice(index, 1);
         event.target.classList.remove('active');
@@ -269,7 +217,6 @@ function toggleAddition(name, price) {
         selectedAdditions.push({ name, price });
         event.target.classList.add('active');
     }
-
     updateItemPrice();
 }
 
@@ -288,16 +235,13 @@ function showSyrupModal() {
                 addSyrup(syrup, size, price);
                 closeSyrupModal();
             };
-
             btn.innerHTML = `
                 <span class="addition-name">${syrup} ${size}</span>
                 <span class="addition-price">+${price}₽</span>
             `;
-
             list.appendChild(btn);
         });
     });
-
     modal.classList.add('active');
 }
 
@@ -306,10 +250,7 @@ function closeSyrupModal() {
 }
 
 function addSyrup(syrup, size, price) {
-    selectedAdditions.push({
-        name: `Сироп ${syrup} ${size}`,
-        price
-    });
+    selectedAdditions.push({ name: `Сироп ${syrup} ${size}`, price });
     updateItemPrice();
 }
 
@@ -326,15 +267,12 @@ function showMintLemonModal() {
             closeMintLemonModal();
             updateItemPrice();
         };
-
         btn.innerHTML = `
             <span class="addition-name">${name}</span>
             <span class="addition-price">+${price}₽</span>
         `;
-
         list.appendChild(btn);
     });
-
     modal.classList.add('active');
 }
 
@@ -346,10 +284,8 @@ function closeMintLemonModal() {
 
 function updateItemPrice() {
     if (!selectedSize) return;
-
     let total = selectedSize.price;
     selectedAdditions.forEach(a => total += a.price);
-
     document.getElementById('item-total').textContent = total;
 }
 
@@ -362,7 +298,6 @@ function addToCart() {
     }
 
     const comment = document.getElementById('item-comment').value;
-
     const cartItem = {
         name: currentItem.name,
         size: selectedSize.name,
@@ -373,10 +308,8 @@ function addToCart() {
     };
 
     cartItem.totalPrice = cartItem.price + cartItem.additionsPrice;
-
     cart.push(cartItem);
     updateCartCount();
-
     tg.showAlert('Добавлено в корзину!');
     backToMain();
 }
@@ -389,13 +322,11 @@ function showCart() {
     document.getElementById('main-page').classList.remove('active');
     document.getElementById('item-page').classList.remove('active');
     document.getElementById('cart-page').classList.add('active');
-
     renderCart();
 }
 
 function renderCart() {
     const cartItemsDiv = document.getElementById('cart-items');
-
     if (cart.length === 0) {
         cartItemsDiv.innerHTML = `
             <div class="empty-cart">
@@ -409,23 +340,14 @@ function renderCart() {
 
     document.querySelector('.cart-footer').style.display = 'block';
     cartItemsDiv.innerHTML = '';
-
     let total = 0;
 
     cart.forEach((item, index) => {
         total += item.totalPrice;
-
         const div = document.createElement('div');
         div.className = 'cart-item';
-
-        const additionsText = item.additions.length > 0
-            ? `<div class="cart-item-details">+ ${item.additions.join(', ')}</div>`
-            : '';
-
-        const commentText = item.comment
-            ? `<div class="cart-item-details">"${item.comment}"</div>`
-            : '';
-
+        const additionsText = item.additions.length > 0 ? `<div class="cart-item-details">+ ${item.additions.join(', ')}</div>` : '';
+        const commentText = item.comment ? `<div class="cart-item-details">"${item.comment}"</div>` : '';
         div.innerHTML = `
             <div class="cart-item-header">
                 <div class="cart-item-name">${item.name} ${item.size}</div>
@@ -435,7 +357,6 @@ function renderCart() {
             ${commentText}
             <div class="cart-item-price">${item.totalPrice}₽</div>
         `;
-
         cartItemsDiv.appendChild(div);
     });
 
@@ -472,9 +393,7 @@ async function checkout() {
     try {
         const response = await fetch(`${API_URL}/order`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 user_id: tg.initDataUnsafe.user.id,
                 items,
@@ -485,12 +404,13 @@ async function checkout() {
         });
 
         const data = await response.json();
-
         if (data.success) {
             tg.showAlert('Заказ отправлен! Ожидайте подтверждения.');
             cart = [];
             updateCartCount();
             backToMain();
+        } else {
+            tg.showAlert('Ошибка при оформлении заказа: ' + (data.error || 'Неизвестная ошибка'));
         }
     } catch (error) {
         console.error('Ошибка оформления:', error);
@@ -502,22 +422,16 @@ async function checkout() {
 
 function generateTimeSlots() {
     const select = document.getElementById('delivery-time');
-
     const now = new Date();
     const startHour = parseInt(config.working_hours.start.split(':')[0]);
     const endHour = parseInt(config.working_hours.end.split(':')[0]);
 
-    // Минимальное время
     now.setMinutes(now.getMinutes() + config.min_minutes_before);
-
-    // Округляем до 15 минут
     const minutes = Math.ceil(now.getMinutes() / 15) * 15;
     now.setMinutes(minutes);
     now.setSeconds(0);
 
-    // Генерируем слоты
     const current = new Date(now);
-
     for (let i = 0; i < 12; i++) {
         if (current.getHours() >= startHour && current.getHours() < endHour) {
             const timeStr = current.toTimeString().substring(0, 5);
@@ -526,7 +440,6 @@ function generateTimeSlots() {
             option.textContent = timeStr;
             select.appendChild(option);
         }
-
         current.setMinutes(current.getMinutes() + 15);
     }
 }
@@ -537,8 +450,6 @@ function backToMain() {
     document.getElementById('item-page').classList.remove('active');
     document.getElementById('cart-page').classList.remove('active');
     document.getElementById('main-page').classList.add('active');
-
-    // Очищаем форму
     document.getElementById('item-comment').value = '';
 }
 
