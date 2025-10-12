@@ -16,7 +16,7 @@ let selectedAdditions = [];
 let itemComment = '';
 
 // ЗАМЕНИТЕ НА ВАШ URL С AMVERA
-const API_URL = 'https://your-app-name.amvera.io';
+const API_URL = 'https://bot-kofejna-hekilopik.amvera.io';
 
 // ============= ИНИЦИАЛИЗАЦИЯ =============
 
