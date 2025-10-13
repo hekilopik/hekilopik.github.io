@@ -1,4 +1,4 @@
-// app.js - ДЛЯ GITHUB PAGES
+// app.js - ДЛЯ VPS ХОСТИНГА
 const tg = window.Telegram.WebApp;
 tg.expand();
 tg.enableClosingConfirmation();
@@ -15,22 +15,30 @@ let selectedSize = null;
 let selectedAdditions = [];
 let itemComment = '';
 
-// ЗАМЕНИТЕ НА ВАШ URL С AMVERA
-const API_URL = 'https://bot-kofejna-hekilopik.amvera.io';
+// ============= API URL ВАШЕГО VPS =============
+const API_URL = 'http://5.83.140.208:25708';
 
 // ============= ИНИЦИАЛИЗАЦИЯ =============
 
 async function init() {
     console.log('Mini App инициализация...');
     console.log('API URL:', API_URL);
+    
+    showLoading();
 
     try {
+        // Проверяем доступность API
+        const healthCheck = await checkAPIHealth();
+        if (!healthCheck) {
+            throw new Error('API недоступен. Проверьте, запущен ли сервер.');
+        }
+        
         // Загружаем данные с API
         const [menuResponse, additionsResponse, configResponse, stopListResponse] = await Promise.all([
-            fetch(`${API_URL}/menu`),
-            fetch(`${API_URL}/additions`),
-            fetch(`${API_URL}/config`),
-            fetch(`${API_URL}/stop_list`)
+            fetchWithTimeout(`${API_URL}/menu`, 10000),
+            fetchWithTimeout(`${API_URL}/additions`, 10000),
+            fetchWithTimeout(`${API_URL}/config`, 10000),
+            fetchWithTimeout(`${API_URL}/stop_list`, 10000)
         ]);
 
         menu = await menuResponse.json();
@@ -38,22 +46,164 @@ async function init() {
         config = await configResponse.json();
         stopList = await stopListResponse.json();
 
-        // Отображаем категории
-        renderCategories();
+        console.log('✅ Данные загружены:', { menu, additions, config, stopList });
 
-        // Отображаем первую категорию
+        renderCategories();
         const firstCategory = Object.keys(menu)[0];
         selectCategory(firstCategory);
-
-        // Генерируем временные слоты
         generateTimeSlots();
 
-        console.log('Mini App успешно загружена!');
+        hideLoading();
+        console.log('✅ Mini App успешно загружена!');
 
     } catch (error) {
-        console.error('Ошибка загрузки:', error);
-        tg.showAlert('Ошибка загрузки меню. Проверьте подключение к интернету.');
+        console.error('❌ Ошибка загрузки:', error);
+        hideLoading();
+        showError(error);
     }
+}
+
+// ============= УТИЛИТЫ =============
+
+async function checkAPIHealth() {
+    """Проверка доступности API"""
+    try {
+        const response = await fetch(`${API_URL}/health`, { 
+            method: 'GET',
+            mode: 'cors'
+        });
+        return response.ok;
+    } catch (error) {
+        console.error('❌ API health check failed:', error);
+        return false;
+    }
+}
+
+async function fetchWithTimeout(url, timeout = 10000) {
+    """Fetch с таймаутом"""
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    
+    try {
+        const response = await fetch(url, {
+            signal: controller.signal,
+            mode: 'cors'
+        });
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        return response;
+    } catch (error) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+            throw new Error('Превышено время ожидания');
+        }
+        throw error;
+    }
+}
+
+function showLoading() {
+    """Показать экран загрузки"""
+    const loadingDiv = document.createElement('div');
+    loadingDiv.id = 'loading-screen';
+    loadingDiv.innerHTML = `
+        <div style="
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--tg-theme-bg-color, #fff);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        ">
+            <div style="font-size: 60px; margin-bottom: 20px;">☕</div>
+            <div style="font-size: 18px; color: var(--tg-theme-hint-color, #999);">
+                Загрузка меню...
+            </div>
+            <div style="
+                margin-top: 20px;
+                width: 40px;
+                height: 40px;
+                border: 4px solid var(--tg-theme-secondary-bg-color, #f0f0f0);
+                border-top-color: var(--tg-theme-button-color, #3390ec);
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+            "></div>
+        </div>
+    `;
+    
+    const style = document.createElement('style');
+    style.textContent = `@keyframes spin { to { transform: rotate(360deg); } }`;
+    document.head.appendChild(style);
+    document.body.appendChild(loadingDiv);
+}
+
+function hideLoading() {
+    """Скрыть экран загрузки"""
+    const loading = document.getElementById('loading-screen');
+    if (loading) loading.remove();
+}
+
+function showError(error) {
+    """Показать ошибку"""
+    const errorDiv = document.createElement('div');
+    errorDiv.innerHTML = `
+        <div style="
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--tg-theme-bg-color, #fff);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+            z-index: 9999;
+        ">
+            <div style="font-size: 60px; margin-bottom: 20px;">⚠️</div>
+            <h2 style="margin-bottom: 15px; color: var(--tg-theme-text-color);">Ошибка загрузки</h2>
+            <p style="color: var(--tg-theme-hint-color, #999); margin-bottom: 20px;">
+                ${error.message || 'Не удалось подключиться к серверу'}
+            </p>
+            <div style="
+                background: var(--tg-theme-secondary-bg-color, #f5f5f5);
+                padding: 15px;
+                border-radius: 10px;
+                margin-bottom: 20px;
+                font-size: 14px;
+            ">
+                <p style="margin: 5px 0;"><strong>API:</strong> ${API_URL}</p>
+                <p style="margin: 5px 0; color: var(--tg-theme-hint-color, #999);">
+                    Проверьте, запущен ли бот на сервере
+                </p>
+            </div>
+            <button onclick="location.reload()" style="
+                padding: 12px 30px;
+                background: var(--tg-theme-button-color, #3390ec);
+                color: var(--tg-theme-button-text-color, #fff);
+                border: none;
+                border-radius: 10px;
+                font-size: 16px;
+                cursor: pointer;
+                margin-bottom: 10px;
+            ">
+                🔄 Попробовать снова
+            </button>
+        </div>
+    `;
+    document.body.appendChild(errorDiv);
+    
+    tg.showAlert(`Ошибка: ${error.message}\n\nПроверьте:\n1. Запущен ли бот на сервере\n2. Доступен ли ${API_URL}\n3. Правильно ли настроен CORS`);
 }
 
 // ============= КАТЕГОРИИ =============
@@ -91,7 +241,6 @@ function renderItems(category) {
         const card = document.createElement('div');
         card.className = 'item-card';
 
-        // Проверяем стоп-лист
         const isInStopList = stopList.some(item =>
             item.category === category && item.item_name === name
         );
@@ -391,30 +540,34 @@ async function checkout() {
     const total = cart.reduce((sum, item) => sum + item.totalPrice, 0);
 
     try {
-        const response = await fetch(`${API_URL}/order`, {
+        const response = await fetchWithTimeout(`${API_URL}/order`, 15000);
+        
+        const fetchOptions = {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                user_id: tg.initDataUnsafe.user.id,
+                user_id: tg.initDataUnsafe?.user?.id || 0,
                 items,
                 total,
                 delivery_time: deliveryTime,
                 order_comment: orderComment
             })
-        });
-
-        const data = await response.json();
+        };
+        
+        const orderResponse = await fetch(`${API_URL}/order`, fetchOptions);
+        const data = await orderResponse.json();
+        
         if (data.success) {
-            tg.showAlert('Заказ отправлен! Ожидайте подтверждения.');
+            tg.showAlert('✅ Заказ отправлен! Ожидайте подтверждения.');
             cart = [];
             updateCartCount();
             backToMain();
         } else {
-            tg.showAlert('Ошибка при оформлении заказа: ' + (data.error || 'Неизвестная ошибка'));
+            tg.showAlert('❌ Ошибка: ' + (data.error || 'Неизвестная ошибка'));
         }
     } catch (error) {
         console.error('Ошибка оформления:', error);
-        tg.showAlert('Ошибка при оформлении заказа');
+        tg.showAlert(`❌ Ошибка при оформлении заказа: ${error.message}`);
     }
 }
 
