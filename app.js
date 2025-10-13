@@ -16,7 +16,7 @@ let selectedAdditions = [];
 let itemComment = '';
 
 // ============= API URL ВАШЕГО VPS =============
- const API_URL = 'http://5.83.140.208:25708';
+const API_URL = 'http://5.83.140.208:25708';
 
 // ============= ИНИЦИАЛИЗАЦИЯ =============
 
@@ -66,7 +66,7 @@ async function init() {
 // ============= УТИЛИТЫ =============
 
 async function checkAPIHealth() {
-    """Проверка доступности API"""
+    // Проверка доступности API
     try {
         const response = await fetch(`${API_URL}/health`, { 
             method: 'GET',
@@ -80,7 +80,7 @@ async function checkAPIHealth() {
 }
 
 async function fetchWithTimeout(url, timeout = 10000) {
-    """Fetch с таймаутом"""
+    // Fetch с таймаутом
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
     
@@ -106,7 +106,7 @@ async function fetchWithTimeout(url, timeout = 10000) {
 }
 
 function showLoading() {
-    """Показать экран загрузки"""
+    // Показать экран загрузки
     const loadingDiv = document.createElement('div');
     loadingDiv.id = 'loading-screen';
     loadingDiv.innerHTML = `
@@ -146,13 +146,13 @@ function showLoading() {
 }
 
 function hideLoading() {
-    """Скрыть экран загрузки"""
+    // Скрыть экран загрузки
     const loading = document.getElementById('loading-screen');
     if (loading) loading.remove();
 }
 
 function showError(error) {
-    """Показать ошибку"""
+    // Показать ошибку
     const errorDiv = document.createElement('div');
     errorDiv.innerHTML = `
         <div style="
@@ -607,6 +607,5 @@ function backToMain() {
 }
 
 // ============= ЗАПУСК =============
-
 
 document.addEventListener('DOMContentLoaded', init);
