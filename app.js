@@ -16,7 +16,7 @@ let selectedAdditions = [];
 let itemComment = '';
 
 // ============= API URL ВАШЕГО VPS =============
-const API_URL = 'http://5.83.140.208:25708';
+ const API_URL = 'http://5.83.140.208:25708';
 
 // ============= ИНИЦИАЛИЗАЦИЯ =============
 
@@ -607,5 +607,6 @@ function backToMain() {
 }
 
 // ============= ЗАПУСК =============
+
 
 document.addEventListener('DOMContentLoaded', init);
