@@ -15,9 +15,9 @@ let selectedSize = null;
 let selectedAdditions = [];
 let itemComment = '';
 
-// ============= API URL ВАШЕГО VPS =============
-// ИЗМЕНЕНО НА ПОРТ 25960
-const API_URL = 'http://5.83.140.208:25960';
+// ============= API URL ВАШЕГО ХОСТИНГА =============
+// HTTPS домен с SSL сертификатом
+const API_URL = 'https://hekilopik.na4u.ru';
 
 // ============= ИНИЦИАЛИЗАЦИЯ =============
 
@@ -628,6 +628,7 @@ function backToMain() {
 // ============= ЗАПУСК =============
 
 document.addEventListener('DOMContentLoaded', init);
+
 
 
 
