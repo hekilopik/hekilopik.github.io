@@ -16,7 +16,7 @@ let selectedAdditions = [];
 let itemComment = '';
 
 // ============= API URL ВАШЕГО VPS =============
-const API_URL = 'http://5.83.140.208:25960';
+const API_URL = 'https://web-production-0b6b5c.up.railway.app';
 
 // ============= ИНИЦИАЛИЗАЦИЯ =============
 
@@ -609,4 +609,5 @@ function backToMain() {
 // ============= ЗАПУСК =============
 
 document.addEventListener('DOMContentLoaded', init);
+
 
