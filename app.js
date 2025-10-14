@@ -16,7 +16,8 @@ let selectedAdditions = [];
 let itemComment = '';
 
 // ============= API URL ВАШЕГО VPS =============
-const API_URL = 'https://web-production-0b6b5c.up.railway.app';
+// ИЗМЕНЕНО НА ПОРТ 25960
+const API_URL = 'http://5.83.140.208:25960';
 
 // ============= ИНИЦИАЛИЗАЦИЯ =============
 
@@ -540,22 +541,36 @@ async function checkout() {
     const total = cart.reduce((sum, item) => sum + item.totalPrice, 0);
 
     try {
-        const response = await fetchWithTimeout(`${API_URL}/order`, 15000);
+        console.log('Отправка заказа на:', `${API_URL}/order`);
         
-        const fetchOptions = {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
+        
+        const response = await fetch(`${API_URL}/order`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
             body: JSON.stringify({
                 user_id: tg.initDataUnsafe?.user?.id || 0,
                 items,
                 total,
                 delivery_time: deliveryTime,
                 order_comment: orderComment
-            })
-        };
+            }),
+            signal: controller.signal,
+            mode: 'cors'
+        });
         
-        const orderResponse = await fetch(`${API_URL}/order`, fetchOptions);
-        const data = await orderResponse.json();
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log('Ответ сервера:', data);
         
         if (data.success) {
             tg.showAlert('✅ Заказ отправлен! Ожидайте подтверждения.');
@@ -567,7 +582,11 @@ async function checkout() {
         }
     } catch (error) {
         console.error('Ошибка оформления:', error);
-        tg.showAlert(`❌ Ошибка при оформлении заказа: ${error.message}`);
+        if (error.name === 'AbortError') {
+            tg.showAlert('❌ Превышено время ожидания. Попробуйте ещё раз.');
+        } else {
+            tg.showAlert(`❌ Ошибка при оформлении заказа: ${error.message}`);
+        }
     }
 }
 
@@ -609,5 +628,6 @@ function backToMain() {
 // ============= ЗАПУСК =============
 
 document.addEventListener('DOMContentLoaded', init);
+
 
 
