@@ -1,4 +1,4 @@
-// app.js - ДЛЯ VPS ХОСТИНГА
+// app.js - Frontend для GitHub Pages, API на Amvera
 const tg = window.Telegram.WebApp;
 tg.expand();
 tg.enableClosingConfirmation();
@@ -15,26 +15,29 @@ let selectedSize = null;
 let selectedAdditions = [];
 let itemComment = '';
 
-// ============= API URL ВАШЕГО ХОСТИНГА =============
-// HTTPS домен с SSL сертификатом
-const API_URL = 'https://hekilopik.na4u.ru';
+// ============= API URL НА AMVERA =============
+const API_URL = 'https://bot-kofejna-hekilopik.amvera.io';
 
 // ============= ИНИЦИАЛИЗАЦИЯ =============
 
 async function init() {
-    console.log('Mini App инициализация...');
-    console.log('API URL:', API_URL);
+    console.log('🚀 Mini App инициализация...');
+    console.log('📡 API URL:', API_URL);
+    console.log('🌐 Frontend URL:', window.location.origin);
     
     showLoading();
 
     try {
         // Проверяем доступность API
+        console.log('🔍 Проверка API...');
         const healthCheck = await checkAPIHealth();
         if (!healthCheck) {
-            throw new Error('API недоступен. Проверьте, запущен ли сервер.');
+            throw new Error('API недоступен. Проверьте, запущен ли бот на Amvera.');
         }
+        console.log('✅ API доступен');
         
         // Загружаем данные с API
+        console.log('📥 Загрузка данных...');
         const [menuResponse, additionsResponse, configResponse, stopListResponse] = await Promise.all([
             fetchWithTimeout(`${API_URL}/menu`, 10000),
             fetchWithTimeout(`${API_URL}/additions`, 10000),
@@ -47,7 +50,11 @@ async function init() {
         config = await configResponse.json();
         stopList = await stopListResponse.json();
 
-        console.log('✅ Данные загружены:', { menu, additions, config, stopList });
+        console.log('✅ Данные загружены:', { 
+            menuItems: Object.keys(menu).length,
+            additionsCount: Object.keys(additions).length,
+            stopListItems: stopList.length 
+        });
 
         renderCategories();
         const firstCategory = Object.keys(menu)[0];
@@ -67,30 +74,39 @@ async function init() {
 // ============= УТИЛИТЫ =============
 
 async function checkAPIHealth() {
-    // Проверка доступности API
     try {
+        console.log('🏥 Health check:', `${API_URL}/health`);
         const response = await fetch(`${API_URL}/health`, { 
             method: 'GET',
-            mode: 'cors'
+            mode: 'cors',
+            headers: {
+                'Accept': 'application/json'
+            }
         });
+        console.log('🏥 Health check response:', response.status);
         return response.ok;
     } catch (error) {
-        console.error('❌ API health check failed:', error);
+        console.error('❌ Health check failed:', error);
         return false;
     }
 }
 
 async function fetchWithTimeout(url, timeout = 10000) {
-    // Fetch с таймаутом
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
     
     try {
+        console.log('🌐 Fetch:', url);
         const response = await fetch(url, {
             signal: controller.signal,
-            mode: 'cors'
+            mode: 'cors',
+            headers: {
+                'Accept': 'application/json'
+            }
         });
         clearTimeout(timeoutId);
+        
+        console.log('📨 Response:', response.status, response.statusText);
         
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -107,7 +123,6 @@ async function fetchWithTimeout(url, timeout = 10000) {
 }
 
 function showLoading() {
-    // Показать экран загрузки
     const loadingDiv = document.createElement('div');
     loadingDiv.id = 'loading-screen';
     loadingDiv.innerHTML = `
@@ -147,13 +162,11 @@ function showLoading() {
 }
 
 function hideLoading() {
-    // Скрыть экран загрузки
     const loading = document.getElementById('loading-screen');
     if (loading) loading.remove();
 }
 
 function showError(error) {
-    // Показать ошибку
     const errorDiv = document.createElement('div');
     errorDiv.innerHTML = `
         <div style="
@@ -185,7 +198,7 @@ function showError(error) {
             ">
                 <p style="margin: 5px 0;"><strong>API:</strong> ${API_URL}</p>
                 <p style="margin: 5px 0; color: var(--tg-theme-hint-color, #999);">
-                    Проверьте, запущен ли бот на сервере
+                    Проверьте, запущен ли бот на Amvera
                 </p>
             </div>
             <button onclick="location.reload()" style="
@@ -204,7 +217,7 @@ function showError(error) {
     `;
     document.body.appendChild(errorDiv);
     
-    tg.showAlert(`Ошибка: ${error.message}\n\nПроверьте:\n1. Запущен ли бот на сервере\n2. Доступен ли ${API_URL}\n3. Правильно ли настроен CORS`);
+    tg.showAlert(`Ошибка: ${error.message}\n\nПроверьте:\n1. Запущен ли бот на Amvera\n2. Доступен ли ${API_URL}\n3. Правильно ли настроен CORS`);
 }
 
 // ============= КАТЕГОРИИ =============
@@ -460,7 +473,7 @@ function addToCart() {
     cartItem.totalPrice = cartItem.price + cartItem.additionsPrice;
     cart.push(cartItem);
     updateCartCount();
-    tg.showAlert('Добавлено в корзину!');
+    tg.showAlert('✅ Добавлено в корзину!');
     backToMain();
 }
 
@@ -541,7 +554,7 @@ async function checkout() {
     const total = cart.reduce((sum, item) => sum + item.totalPrice, 0);
 
     try {
-        console.log('Отправка заказа на:', `${API_URL}/order`);
+        console.log('📤 Отправка заказа на:', `${API_URL}/order`);
         
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 15000);
@@ -565,12 +578,14 @@ async function checkout() {
         
         clearTimeout(timeoutId);
         
+        console.log('📨 Ответ сервера:', response.status);
+        
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
         
         const data = await response.json();
-        console.log('Ответ сервера:', data);
+        console.log('✅ Данные ответа:', data);
         
         if (data.success) {
             tg.showAlert('✅ Заказ отправлен! Ожидайте подтверждения.');
@@ -581,7 +596,7 @@ async function checkout() {
             tg.showAlert('❌ Ошибка: ' + (data.error || 'Неизвестная ошибка'));
         }
     } catch (error) {
-        console.error('Ошибка оформления:', error);
+        console.error('❌ Ошибка оформления:', error);
         if (error.name === 'AbortError') {
             tg.showAlert('❌ Превышено время ожидания. Попробуйте ещё раз.');
         } else {
