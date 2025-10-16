@@ -32,7 +32,7 @@ async function init() {
         console.log('🔍 Проверка API...');
         const healthCheck = await checkAPIHealth();
         if (!healthCheck) {
-            throw new Error('API недоступен. Проверьте, запущен ли бот на Amvera.');
+            throw new Error('API недоступен. Проверьте, запущен ли бот.');
         }
         console.log('✅ API доступен');
         
@@ -643,6 +643,7 @@ function backToMain() {
 // ============= ЗАПУСК =============
 
 document.addEventListener('DOMContentLoaded', init);
+
 
 
 
