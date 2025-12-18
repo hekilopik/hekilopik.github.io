@@ -1,111 +1,150 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" class="h-full">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Кофейня</title>
-    <link rel="stylesheet" href="/style.css">
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <title>Загрузка сервера</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Твои стили -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Иконки -->
+    <script src="https://unpkg.com/feather-icons"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        swtor: {
+                            bg: '#050509',
+                            gold: '#c8aa6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body>
-    <!-- ГЛАВНАЯ СТРАНИЦА -->
-    <div id="main-page" class="page active">
-        <div class="header">
-            <h1>🍰 Кофейня</h1>
-            <div class="cart-button" onclick="showCart()">
-                🧺 <span id="cart-count">0</span>
+<body class="h-full min-h-screen overflow-hidden bg-swtor-bg text-white">
+
+    <!-- ФОН + БЛЮР -->
+    <div class="bg-layer bg-layer-blur"></div>
+    <div class="bg-layer bg-layer-overlay"></div>
+
+    <!-- ОСНОВНОЙ КОНТЕЙНЕР (z-10, чтобы быть выше фона) -->
+    <div class="relative z-10 h-full w-full flex flex-col items-center justify-center px-4">
+        <div class="w-full max-w-4xl text-center">
+
+            <!-- ЛОГОТИП -->
+            <div class="mb-6 flex flex-col items-center">
+                <div class="relative mb-3">
+                    <div class="absolute inset-0 rounded-full blur-2xl opacity-70"
+                         style="background: radial-gradient(circle, rgba(200,170,110,0.6) 0%, rgba(0,0,0,0) 70%);">
+                    </div>
+                    <!-- ПОДСТАВЬ СВОЙ ЛОГО -->
+                    <img src="w.png"
+                         alt="Логотип сервера"
+                         class="relative mx-auto h-24 w-auto object-contain drop-shadow-[0_0_25px_rgba(200,170,110,0.9)]">
+                </div>
+
+                <div id="server-name"
+                     class="text-swtor-gold font-semibold tracking-[0.25em] uppercase text-xs md:text-sm">
+                    НОВЫЙ СЕРВЕР
+                </div>
+                <div id="server-gamemode"
+                     class="text-swtor-gold text-opacity-70 text-xs mt-1">
+                    Режим: неизвестен
+                </div>
+            </div>
+
+            <!-- ПРОГРЕСС-БАР + СТРОКА СОСТОЯНИЯ -->
+            <div class="mb-8 max-w-3xl mx-auto">
+                <div class="relative h-1.5 bg-black/60 rounded-full overflow-hidden border border-swtor-gold/40">
+                    <div id="loading-progress"
+                         class="absolute top-0 left-0 h-full bg-gradient-to-r from-swtor-gold to-yellow-300 rounded-full transition-all duration-300"
+                         style="width: 0%;">
+                    </div>
+                </div>
+                <p id="loading-status"
+                   class="mt-2 text-swtor-gold text-xs md:text-sm font-mono tracking-wide">
+                    Подготовка к подключению...
+                </p>
+            </div>
+
+            <!-- ИНФО-КАРТОЧКИ -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+
+                <!-- Версия сервера -->
+                <div class="bg-black/70 p-4 rounded-2xl border border-swtor-gold/30 backdrop-blur info-card">
+                    <div class="flex items-center justify-center mb-2">
+                        <i data-feather="cpu" class="text-swtor-gold mr-2"></i>
+                        <h3 class="text-swtor-gold font-bold uppercase text-xs tracking-wide">
+                            Версия сервера
+                        </h3>
+                    </div>
+                    <p id="server-version"
+                       class="text-white text-2xl font-mono">
+                        0.5.1
+                    </p>
+                </div>
+
+                <!-- Карта -->
+                <div class="bg-black/70 p-4 rounded-2xl border border-swtor-gold/30 backdrop-blur info-card">
+                    <div class="flex items-center justify-center mb-2">
+                        <i data-feather="map" class="text-swtor-gold mr-2"></i>
+                        <h3 class="text-swtor-gold font-bold uppercase text-xs tracking-wide">
+                            Карта
+                        </h3>
+                    </div>
+                    <p id="map-name"
+                       class="text-white text-xl font-mono">
+                        Загрузка...
+                    </p>
+                </div>
+
+                <!-- SteamID -->
+                <div class="bg-black/70 p-4 rounded-2xl border border-swtor-gold/30 backdrop-blur info-card">
+                    <div class="flex items-center justify-center mb-2">
+                        <i data-feather="hash" class="text-swtor-gold mr-2"></i>
+                        <h3 class="text-swtor-gold font-bold uppercase text-xs tracking-wide">
+                            Твой SteamID
+                        </h3>
+                    </div>
+                    <p id="steam-id"
+                       class="text-white text-xs md:text-sm font-mono break-all leading-snug">
+                        Подключение...
+                    </p>
+                </div>
+            </div>
+
+            <!-- БЛОК СОВЕТА -->
+            <div class="bg-black/70 p-4 rounded-2xl border border-swtor-gold/30 max-w-3xl mx-auto info-card">
+                <div class="flex items-center justify-center mb-2">
+                    <i data-feather="info" class="text-swtor-gold mr-2"></i>
+                    <h3 class="text-swtor-gold font-bold uppercase text-xs tracking-wide">
+                        Совет
+                    </h3>
+                </div>
+                <p id="tip-text" class="text-white text-xs md:text-sm italic">
+                    "Используй /me и /it, чтобы описывать действия и окружение — это делает RP живым."
+                </p>
             </div>
         </div>
 
-        <!-- КАТЕГОРИИ -->
-        <div id="categories" class="categories"></div>
-
-        <!-- ТОВАРЫ -->
-        <div id="items" class="items"></div>
-    </div>
-
-    <!-- СТРАНИЦА ТОВАРА -->
-    <div id="item-page" class="page">
-        <div class="header">
-            <button class="back-button" onclick="backToMain()">← Назад</button>
-            <h2 id="item-title"></h2>
-        </div>
-
-        <!-- РАЗМЕРЫ -->
-        <div id="sizes" class="sizes"></div>
-
-        <!-- ДОБАВКИ -->
-        <div class="additions-section">
-            <h3>Добавки</h3>
-            <div id="additions" class="additions"></div>
-        </div>
-
-        <!-- КОММЕНТАРИЙ -->
-        <div class="comment-section">
-            <label>Комментарий к позиции:</label>
-            <input type="text" id="item-comment" maxlength="50" placeholder="Например: погорячее">
-        </div>
-
-        <!-- ИТОГО И КНОПКА -->
-        <div class="item-footer">
-            <div class="item-price">
-                Итого: <span id="item-total">0</span>₽
-            </div>
-            <button class="btn-primary" onclick="addToCart()">Добавить в корзину</button>
+        <!-- ФУТЕР -->
+        <div class="absolute bottom-0 left-0 right-0 py-3 text-center">
+            <p class="text-swtor-gold text-opacity-70 text-[10px] md:text-xs tracking-[0.25em] uppercase">
+                © 2025 The Great Divide • Загрузка игрового окружения...
+            </p>
         </div>
     </div>
 
-    <!-- КОРЗИНА -->
-    <div id="cart-page" class="page">
-        <div class="header">
-            <button class="back-button" onclick="backToMain()">← Назад</button>
-            <h2>Корзина</h2>
-        </div>
-
-        <div id="cart-items" class="cart-items"></div>
-
-        <div class="cart-footer">
-            <!-- КОММЕНТАРИЙ К ЗАКАЗУ -->
-            <div class="comment-section">
-                <label>Комментарий к заказу:</label>
-                <textarea id="order-comment" maxlength="120" placeholder="Например: сэндвич не греть, пакет, подставка"></textarea>
-            </div>
-
-            <!-- ВРЕМЯ -->
-            <div class="time-section">
-                <label>Время:</label>
-                <select id="delivery-time">
-                    <option value="asap">Как можно скорее</option>
-                </select>
-            </div>
-
-            <!-- ИТОГО -->
-            <div class="cart-total">
-                Итого: <span id="cart-total">0</span>₽
-            </div>
-
-            <button class="btn-primary" onclick="checkout()">Оформить заказ</button>
-        </div>
-    </div>
-
-    <!-- МОДАЛЬНОЕ ОКНО ДОБАВОК -->
-    <div id="syrup-modal" class="modal">
-        <div class="modal-content">
-            <h3>Выберите сироп</h3>
-            <div id="syrup-list"></div>
-            <button class="btn-secondary" onclick="closeSyrupModal()">Закрыть</button>
-        </div>
-    </div>
-
-    <!-- МОДАЛЬНОЕ ОКНО МЯТА/ЛИМОН -->
-    <div id="mint-lemon-modal" class="modal">
-        <div class="modal-content">
-            <h3>Выберите добавку</h3>
-            <div id="mint-lemon-list"></div>
-            <button class="btn-secondary" onclick="closeMintLemonModal()">Закрыть</button>
-        </div>
-    </div>
-
-    <script src="/app.js"></script>
+    <!-- Скрипты -->
+    <script src="script.js"></script>
+    <script>feather.replace();</script>
 </body>
 </html>
